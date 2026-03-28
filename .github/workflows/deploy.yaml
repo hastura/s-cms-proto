@@ -35,9 +35,7 @@ jobs:
           NODE_ENV: production
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        uses: actions/upload-artifact@v6
         with:
           name: nextjs-build
           path: |
