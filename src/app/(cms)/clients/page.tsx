@@ -5,7 +5,6 @@ import { CMSTopbar } from '@/components/layout/CMSTopbar'
 import { cn } from '@/lib/utils'
 
 type ClientStatus = 'active' | 'pending' | 'inactive'
-type ClientTier   = 'Enterprise' | 'Professional' | 'Startup'
 
 interface Client {
   id: string
@@ -13,7 +12,7 @@ interface Client {
   email: string
   industry: string
   status: ClientStatus
-  tier: ClientTier
+  tier: string
   revenue: string
   initial: string
   avatarBg: string
@@ -38,14 +37,32 @@ const statusConfig: Record<ClientStatus, { label: string; className: string }> =
 type ModalMode = 'add' | 'edit' | null
 
 interface FormState {
+  companyInitial: string
   name: string
-  email: string
-  industry: string
-  tier: ClientTier
+  pricing: string
+  picEmail: string
+  picName: string
+  picPhone: string
+  startDate: string
+  endDate: string
+  bankAccount: string
+  bankAccountNumber: string
   status: ClientStatus
 }
 
-const emptyForm: FormState = { name: '', email: '', industry: '', tier: 'Startup', status: 'active' }
+const emptyForm: FormState = {
+  companyInitial: '',
+  name: '',
+  pricing: '',
+  picEmail: '',
+  picName: '',
+  picPhone: '',
+  startDate: '',
+  endDate: '',
+  bankAccount: '',
+  bankAccountNumber: '',
+  status: 'inactive',
+}
 
 export default function ClientsPage() {
   const [clients, setClients] = useState(initialClients)
@@ -68,7 +85,19 @@ export default function ClientsPage() {
 
   function openEdit(client: Client) {
     setEditTarget(client)
-    setForm({ name: client.name, email: client.email, industry: client.industry, tier: client.tier, status: client.status })
+    setForm({
+      companyInitial: client.initial,
+      name: client.name,
+      pricing: '',
+      picEmail: client.email,
+      picName: '',
+      picPhone: '',
+      startDate: '',
+      endDate: '',
+      bankAccount: '',
+      bankAccountNumber: '',
+      status: client.status,
+    })
     setModal('edit')
   }
 
@@ -78,9 +107,9 @@ export default function ClientsPage() {
   }
 
   function handleSave() {
-    if (!form.name || !form.email) return
+    if (!form.name || !form.picEmail) return
     if (modal === 'add') {
-      const initial = form.name.charAt(0).toUpperCase()
+      const initial = (form.companyInitial || form.name).charAt(0).toUpperCase()
       const colors = [
         { bg: '#eff6ff', color: '#2563eb' },
         { bg: '#fff7ed', color: '#ea580c' },
@@ -91,11 +120,11 @@ export default function ClientsPage() {
       const newClient: Client = {
         id: String(Date.now()),
         name: form.name,
-        email: form.email,
-        industry: form.industry || '—',
+        email: form.picEmail,
+        industry: '—',
         status: form.status,
-        tier: form.tier,
-        revenue: '—',
+        tier: '—',
+        revenue: form.pricing ? `Rp ${form.pricing}` : '—',
         initial,
         avatarBg: c.bg,
         avatarColor: c.color,
@@ -105,7 +134,7 @@ export default function ClientsPage() {
       setClients((prev) =>
         prev.map((c) =>
           c.id === editTarget.id
-            ? { ...c, name: form.name, email: form.email, industry: form.industry, tier: form.tier, status: form.status }
+            ? { ...c, name: form.name, email: form.picEmail, initial: form.companyInitial || c.initial, status: form.status }
             : c
         )
       )
@@ -255,51 +284,172 @@ export default function ClientsPage() {
       {/* Add / Edit Modal */}
       {modal && (
         <div className="fixed inset-0 z-modal flex items-center justify-center bg-black/40 p-4" onClick={closeModal}>
-          <div className="w-full max-w-[480px] rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold text-neutral-950">
-              {modal === 'add' ? 'Add New Client' : 'Edit Client'}
-            </h2>
-            <p className="mt-1 text-sm text-neutral-500">
-              {modal === 'add' ? 'Fill in the details to onboard a new client.' : 'Update the client information below.'}
-            </p>
+          <div className="w-full max-w-[520px] rounded-lg border border-neutral-100 bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-[10px] bg-primary-50">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-primary-600">
+                    <path d="M13 7a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M3 17a7 7 0 0114 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-[18px] font-medium text-neutral-950">
+                    {modal === 'add' ? 'Add New Client' : 'Edit Client'}
+                  </h2>
+                  <p className="text-sm text-neutral-500">
+                    Fill in the details to onboard a new partner.
+                  </p>
+                </div>
+              </div>
+              <button onClick={closeModal} className="flex size-8 items-center justify-center rounded-[10px] text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600" aria-label="Close">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </button>
+            </div>
 
-            <div className="mt-5 flex flex-col gap-4">
-              {[
-                { label: 'Company Name', key: 'name', placeholder: 'e.g. Stellar Tech Solutions' },
-                { label: 'Email Address', key: 'email', placeholder: 'e.g. admin@company.com' },
-                { label: 'Industry',     key: 'industry', placeholder: 'e.g. Fintech' },
-              ].map(({ label, key, placeholder }) => (
-                <div key={key} className="flex flex-col gap-1.5">
-                  <label className="text-[13px] font-medium text-neutral-700">{label}</label>
+            {/* Modal Body */}
+            <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
+              <div className="flex flex-col gap-4">
+                {/* Company Initial */}
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[13px] font-medium text-neutral-500">Company Initial</label>
                   <input
                     type="text"
-                    placeholder={placeholder}
-                    value={form[key as keyof FormState]}
-                    onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                    className="h-10 rounded-md border border-neutral-300 bg-neutral-50 px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-600"
+                    placeholder="e.g. STRTVY"
+                    value={form.companyInitial}
+                    onChange={(e) => setForm((f) => ({ ...f, companyInitial: e.target.value }))}
+                    className="h-10 rounded-md border-[1.5px] border-neutral-100 bg-white px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
                   />
                 </div>
-              ))}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[13px] font-medium text-neutral-700">Tier</label>
-                  <select
-                    value={form.tier}
-                    onChange={(e) => setForm((f) => ({ ...f, tier: e.target.value as ClientTier }))}
-                    className="h-10 rounded-md border border-neutral-300 bg-neutral-50 px-3 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-600"
-                  >
-                    <option>Enterprise</option>
-                    <option>Professional</option>
-                    <option>Startup</option>
-                  </select>
+                {/* Company Name */}
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[13px] font-medium text-neutral-500">Company Name</label>
+                  <input
+                    type="text"
+                    placeholder="PT Strativy Indonesia"
+                    value={form.name}
+                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    className="h-10 rounded-md border-[1.5px] border-neutral-100 bg-white px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
+                  />
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[13px] font-medium text-neutral-700">Status</label>
+
+                {/* Pricing */}
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[13px] font-medium text-neutral-500">Pricing</label>
+                  <div className="relative flex h-10 rounded-md border-[1.5px] border-neutral-100 bg-white focus-within:border-primary-600 focus-within:ring-2 focus-within:ring-primary-600">
+                    <div className="flex items-center border-r border-neutral-200 bg-neutral-100 px-3">
+                      <span className="text-xs font-medium text-neutral-500">Rp</span>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="e.g. 5,000,000"
+                      value={form.pricing}
+                      onChange={(e) => setForm((f) => ({ ...f, pricing: e.target.value }))}
+                      className="flex-1 bg-transparent px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* PIC Email */}
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[13px] font-medium text-neutral-500">PIC Email</label>
+                  <input
+                    type="email"
+                    placeholder="pricing@company.com"
+                    value={form.picEmail}
+                    onChange={(e) => setForm((f) => ({ ...f, picEmail: e.target.value }))}
+                    className="h-10 rounded-md border-[1.5px] border-neutral-100 bg-white px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
+                  />
+                </div>
+
+                {/* PIC Name + PIC Phone */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-2.5">
+                    <label className="text-[13px] font-medium text-neutral-500">PIC Name</label>
+                    <input
+                      type="text"
+                      placeholder="Full name"
+                      value={form.picName}
+                      onChange={(e) => setForm((f) => ({ ...f, picName: e.target.value }))}
+                      className="h-10 rounded-md border-[1.5px] border-neutral-100 bg-white px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2.5">
+                    <label className="text-[13px] font-medium text-neutral-500">PIC Phone Number</label>
+                    <input
+                      type="tel"
+                      placeholder="+62 8xx xxxx xxxx"
+                      value={form.picPhone}
+                      onChange={(e) => setForm((f) => ({ ...f, picPhone: e.target.value }))}
+                      className="h-10 rounded-md border-[1.5px] border-neutral-100 bg-white px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Agreement PDF */}
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[13px] font-medium text-neutral-500">Agreement (PDF)</label>
+                  <div className="flex flex-col items-center gap-2 rounded-lg border-[1.5px] border-dashed border-primary-300 bg-primary-50 py-3 text-center">
+                    <p className="text-[13px] font-medium text-primary-600">↑&nbsp;&nbsp;Upload Agreement PDF</p>
+                    <p className="text-xs text-neutral-400">Drag &amp; drop or click to browse</p>
+                  </div>
+                </div>
+
+                {/* Start Date + End Date */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-2.5">
+                    <label className="text-[13px] font-medium text-neutral-500">Start Date</label>
+                    <input
+                      type="date"
+                      value={form.startDate}
+                      onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
+                      className="h-10 rounded-md border-[1.5px] border-neutral-100 bg-white px-3 text-sm text-neutral-900 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2.5">
+                    <label className="text-[13px] font-medium text-neutral-500">End Date</label>
+                    <input
+                      type="date"
+                      value={form.endDate}
+                      onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
+                      className="h-10 rounded-md border-[1.5px] border-neutral-100 bg-white px-3 text-sm text-neutral-900 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Bank Account + Bank Account Number */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-2.5">
+                    <label className="text-[13px] font-medium text-neutral-500">Bank Account</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. BCA"
+                      value={form.bankAccount}
+                      onChange={(e) => setForm((f) => ({ ...f, bankAccount: e.target.value }))}
+                      className="h-10 rounded-md border-[1.5px] border-neutral-100 bg-white px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2.5">
+                    <label className="text-[13px] font-medium text-neutral-500">Bank Account Number</label>
+                    <input
+                      type="text"
+                      placeholder="1234567890"
+                      value={form.bankAccountNumber}
+                      onChange={(e) => setForm((f) => ({ ...f, bankAccountNumber: e.target.value }))}
+                      className="h-10 rounded-md border-[1.5px] border-neutral-100 bg-white px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Status */}
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[13px] font-medium text-neutral-500">Status</label>
                   <select
                     value={form.status}
                     onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as ClientStatus }))}
-                    className="h-10 rounded-md border border-neutral-300 bg-neutral-50 px-3 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-600"
+                    className="h-10 rounded-md border-[1.5px] border-neutral-100 bg-white px-3 text-sm text-neutral-900 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
                   >
                     <option value="active">Active</option>
                     <option value="pending">Pending</option>
@@ -307,22 +457,22 @@ export default function ClientsPage() {
                   </select>
                 </div>
               </div>
-
-              {modal === 'add' && (
-                <div className="rounded-lg border border-primary-100 bg-primary-50 px-4 py-3">
-                  <p className="text-[13px] text-primary-700">
-                    ✉ An activation email will be sent to the client&apos;s email address after saving.
-                  </p>
-                </div>
-              )}
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <button onClick={closeModal} className="rounded-md border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-50">
+            {/* Modal Footer */}
+            <div className="flex items-center justify-center gap-4 border-t border-neutral-200 px-6 py-4">
+              <button
+                onClick={closeModal}
+                className="h-[42px] flex-1 rounded-[7px] border border-primary-600 text-[16px] text-primary-600 transition-colors hover:bg-primary-50"
+              >
                 Cancel
               </button>
-              <button onClick={handleSave} className="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700">
-                {modal === 'add' ? 'Add Client' : 'Save Changes'}
+              <button
+                onClick={handleSave}
+                disabled={!form.name || !form.picEmail}
+                className="h-[42px] flex-1 rounded-[7px] bg-primary-600 text-[16px] text-white transition-colors hover:bg-primary-700 disabled:opacity-40"
+              >
+                Save
               </button>
             </div>
           </div>
