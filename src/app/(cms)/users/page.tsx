@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { CMSTopbar } from '@/components/layout/CMSTopbar'
 import { cn } from '@/lib/utils'
 
-type UserRole   = 'Super Admin' | 'Manager' | 'Employee'
+type UserRole   = 'Super Admin' | 'Admin' | 'Member'
 type UserStatus = 'active' | 'inactive'
 
 interface TeamUser {
@@ -21,10 +21,10 @@ interface TeamUser {
 
 const initialUsers: TeamUser[] = [
   { id: '1', name: 'Alex Rivera',    email: 'alex@strativy.com',    role: 'Super Admin', status: 'active',   lastActive: '2 hours ago',   initials: 'AR', avatarBg: '#eff6ff', avatarColor: '#2563eb' },
-  { id: '2', name: 'Maya Chen',      email: 'maya@strativy.com',    role: 'Manager',     status: 'active',   lastActive: '1 day ago',     initials: 'MC', avatarBg: '#f0fdf4', avatarColor: '#16a34a' },
-  { id: '3', name: 'Jordan Kim',     email: 'jordan@strativy.com',  role: 'Employee',    status: 'active',   lastActive: '3 days ago',    initials: 'JK', avatarBg: '#faf5ff', avatarColor: '#7c3aed' },
-  { id: '4', name: 'Sam Wright',     email: 'sam@strativy.com',     role: 'Employee',    status: 'active',   lastActive: '5 days ago',    initials: 'SW', avatarBg: '#fff7ed', avatarColor: '#ea580c' },
-  { id: '5', name: 'Taylor Morgan',  email: 'taylor@strativy.com',  role: 'Employee',    status: 'inactive', lastActive: '14 days ago',   initials: 'TM', avatarBg: '#f8fafc', avatarColor: '#94a3b8' },
+  { id: '2', name: 'Maya Chen',      email: 'maya@strativy.com',    role: 'Admin',       status: 'active',   lastActive: '1 day ago',     initials: 'MC', avatarBg: '#f0fdf4', avatarColor: '#16a34a' },
+  { id: '3', name: 'Jordan Kim',     email: 'jordan@strativy.com',  role: 'Member',      status: 'active',   lastActive: '3 days ago',    initials: 'JK', avatarBg: '#faf5ff', avatarColor: '#7c3aed' },
+  { id: '4', name: 'Sam Wright',     email: 'sam@strativy.com',     role: 'Member',      status: 'active',   lastActive: '5 days ago',    initials: 'SW', avatarBg: '#fff7ed', avatarColor: '#ea580c' },
+  { id: '5', name: 'Taylor Morgan',  email: 'taylor@strativy.com',  role: 'Member',      status: 'inactive', lastActive: '14 days ago',   initials: 'TM', avatarBg: '#f8fafc', avatarColor: '#94a3b8' },
 ]
 
 const statusConfig: Record<UserStatus, { label: string; className: string }> = {
@@ -34,8 +34,8 @@ const statusConfig: Record<UserStatus, { label: string; className: string }> = {
 
 const roleColors: Record<UserRole, string> = {
   'Super Admin': 'bg-primary-50 text-primary-700',
-  'Manager':     'bg-warning-50 text-warning-700',
-  'Employee':    'bg-neutral-100 text-neutral-600',
+  'Admin':       'bg-warning-50 text-warning-700',
+  'Member':      'bg-neutral-100 text-neutral-600',
 }
 
 type ModalMode = 'invite' | 'edit' | 'delete' | null
@@ -46,7 +46,7 @@ interface FormState {
   role: UserRole
 }
 
-const emptyForm: FormState = { name: '', email: '', role: 'Employee' }
+const emptyForm: FormState = { name: '', email: '', role: 'Member' }
 
 export default function UsersPage() {
   const [users, setUsers] = useState(initialUsers)
@@ -123,20 +123,6 @@ export default function UsersPage() {
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               Invite User
             </button>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: 'Total Users',   value: users.length,                                   color: 'text-neutral-950' },
-              { label: 'Active',        value: users.filter(u => u.status === 'active').length, color: 'text-success-600' },
-              { label: 'Inactive',      value: users.filter(u => u.status === 'inactive').length, color: 'text-neutral-400' },
-            ].map((s) => (
-              <div key={s.label} className="rounded-xl border border-neutral-200 bg-white px-5 py-4">
-                <p className="text-sm text-neutral-500">{s.label}</p>
-                <p className={cn('mt-1 text-2xl font-bold', s.color)}>{s.value}</p>
-              </div>
-            ))}
           </div>
 
           {/* Table card */}
@@ -279,9 +265,9 @@ export default function UsersPage() {
                   onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as UserRole }))}
                   className="h-10 rounded-md border border-neutral-300 bg-neutral-50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600"
                 >
-                  <option>Super Admin</option>
-                  <option>Manager</option>
-                  <option>Employee</option>
+                  <option value="Super Admin">Super Admin (Invite Admin &amp; Member + CRUD)</option>
+                  <option value="Admin">Admin (CRUD)</option>
+                  <option value="Member">Member (Read only)</option>
                 </select>
               </div>
 
